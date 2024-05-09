@@ -65,7 +65,35 @@
       },
       "bg_source": {
         "type": "string",
-        "description": "BG Source"
+        "widget": "select",
+        "description": "Light Direction",
+        "oneOf": [
+          {
+            "description": "LEFT",
+            "enum": [
+              "LEFT"
+            ]
+          },
+          {
+            "description": "RIGHT",
+            "enum": [
+              "RIGHT"
+            ]
+          },
+          {
+            "description": "TOP",
+            "enum": [
+              "TOP"
+            ]
+          },
+          {
+            "description": "BOTTOM",
+            "enum": [
+              "BOTTOM"
+            ]
+          }
+        ],
+        "default": "BOTTOM"
       }
     },
     "buttons": [

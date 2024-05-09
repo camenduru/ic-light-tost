@@ -39,12 +39,12 @@
       },
       "a_prompt": {
         "type": "string",
-        "description": "A Prompt",
+        "description": "Added Prompt",
         "widget": "textarea"
       },
       "n_prompt": {
         "type": "string",
-        "description": "N prompt",
+        "description": "Negative prompt",
         "widget": "textarea"
       },
       "cfg": {

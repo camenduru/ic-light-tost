@@ -1,8 +1,8 @@
 {
   "input_fg": "https://hips.hearstapps.com/hmg-prod/images/scarlett-johansson-attends-the-premiere-of-illuminations-news-photo-1639390369.jpg",
-  "prompt": "a beautiful girl, neon light, city",
+  "prompt": "beautiful woman, detailed face, neon light, city",
   "width": 512,
-  "height": 512,
+  "height": 960,
   "seed": 0,
   "steps": 25,
   "a_prompt": "best quality",

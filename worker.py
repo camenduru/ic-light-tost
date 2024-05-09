@@ -1,6 +1,5 @@
 import os
 import math
-import gradio as gr
 import numpy as np
 import torch
 import safetensors.torch as sf
@@ -62,7 +61,7 @@ del sd_offset, sd_origin, sd_merged, keys
 
 # Device
 
-device = torch.device('cuda')
+device = torch.device('cuda:1')
 text_encoder = text_encoder.to(device=device, dtype=torch.float16)
 vae = vae.to(device=device, dtype=torch.bfloat16)
 unet = unet.to(device=device, dtype=torch.float16)
@@ -229,27 +228,25 @@ def run_rmbg(img, sigma=0.0):
     result = 127 + (img.astype(np.float32) - 127 + sigma) * alpha
     return result.clip(0, 255).astype(np.uint8), alpha
 
-
 @torch.inference_mode()
 def process(input_fg, prompt, image_width, image_height, num_samples, seed, steps, a_prompt, n_prompt, cfg, highres_scale, highres_denoise, lowres_denoise, bg_source):
-    bg_source = BGSource(bg_source)
     input_bg = None
 
-    if bg_source == BGSource.NONE:
+    if bg_source == 'NONE':
         pass
-    elif bg_source == BGSource.LEFT:
+    elif bg_source == 'LEFT':
         gradient = np.linspace(255, 0, image_width)
         image = np.tile(gradient, (image_height, 1))
         input_bg = np.stack((image,) * 3, axis=-1).astype(np.uint8)
-    elif bg_source == BGSource.RIGHT:
+    elif bg_source == 'RIGHT':
         gradient = np.linspace(0, 255, image_width)
         image = np.tile(gradient, (image_height, 1))
         input_bg = np.stack((image,) * 3, axis=-1).astype(np.uint8)
-    elif bg_source == BGSource.TOP:
+    elif bg_source == 'TOP':
         gradient = np.linspace(255, 0, image_height)[:, None]
         image = np.tile(gradient, (1, image_width))
         input_bg = np.stack((image,) * 3, axis=-1).astype(np.uint8)
-    elif bg_source == BGSource.BOTTOM:
+    elif bg_source == 'BOTTOM':
         gradient = np.linspace(0, 255, image_height)[:, None]
         image = np.tile(gradient, (1, image_width))
         input_bg = np.stack((image,) * 3, axis=-1).astype(np.uint8)
@@ -334,90 +331,93 @@ def process(input_fg, prompt, image_width, image_height, num_samples, seed, step
 
     return pytorch2numpy(pixels)
 
+import gradio as gr
+import json
+from diffusers.utils import load_image
+
+def closestNumber(n, m):
+    q = int(n / m)
+    n1 = m * q
+    if (n * m) > 0:
+        n2 = m * (q + 1)
+    else:
+        n2 = m * (q - 1)
+    if abs(n - n1) < abs(n - n2):
+        return n1
+    return n2
+
+def is_parsable_json(command):
+    try:
+        json.loads(command)
+        return True
+    except json.JSONDecodeError:
+        return False
 
 @torch.inference_mode()
-def process_relight(input_fg, prompt, image_width, image_height, num_samples, seed, steps, a_prompt, n_prompt, cfg, highres_scale, highres_denoise, lowres_denoise, bg_source):
-    input_fg, matting = run_rmbg(input_fg)
-    results = process(input_fg, prompt, image_width, image_height, num_samples, seed, steps, a_prompt, n_prompt, cfg, highres_scale, highres_denoise, lowres_denoise, bg_source)
-    return input_fg, results
+def generate(command):
+    if is_parsable_json(command):
+        values = json.loads(command)
+        input_fg = values['input_fg']
+        input_fg = load_image(input_fg)
+        input_fg = np.asarray(input_fg)
+        prompt = values['prompt']
+        width =closestNumber(values['width'], 8)
+        height = closestNumber(values['height'], 8)
+        seed = values['seed']
+        steps = values['steps']
+        a_prompt = values['a_prompt']
+        n_prompt = values['n_prompt']
+        cfg = values['cfg']
+        highres_scale = values['highres_scale']
+        highres_denoise = values['highres_denoise']
+        lowres_denoise = values['lowres_denoise']
+        bg_source = values['bg_source']        
+        input_fg, matting = run_rmbg(input_fg)
+        images = process(input_fg, prompt, width, height, 1, seed, steps, a_prompt, n_prompt, cfg, highres_scale, highres_denoise, lowres_denoise, bg_source)
+        image = Image.fromarray(images[0])
+        image.save('/content/image.jpg')
+        return image
+    else:
+        input_fg = load_image("https://hips.hearstapps.com/hmg-prod/images/scarlett-johansson-attends-the-premiere-of-illuminations-news-photo-1639390369.jpg?crop=1.00xw:0.836xh;0,0&resize=640:*")
+        input_fg = np.asarray(input_fg)
+        width = closestNumber(512, 8)
+        height = closestNumber(512, 8)
+        images = process(input_fg, command, width, height, 1, 1, 25, 'best quality', 'lowres, bad anatomy, bad hands, cropped, worst quality', 2, 1.5, 0.5, 0.9, 'RIGHT')
+        image = Image.fromarray(images[0])
+        image.save('/content/image.jpg')
+        return image
 
-
-quick_prompts = [
-    'sunshine from window',
-    'neon light, city',
-    'sunset over sea',
-    'golden time',
-    'sci-fi RGB glowing, cyberpunk',
-    'natural lighting',
-    'warm atmosphere, at home, bedroom',
-    'magic lit',
-    'evil, gothic, Yharnam',
-    'light and shadow',
-    'shadow from window',
-    'soft studio lighting',
-    'home atmosphere, cozy bedroom illumination',
-    'neon, Wong Kar-wai, warm'
-]
-quick_prompts = [[x] for x in quick_prompts]
-
-
-quick_subjects = [
-    'beautiful woman, detailed face',
-    'handsome man, detailed face',
-]
-quick_subjects = [[x] for x in quick_subjects]
-
-
-class BGSource(Enum):
-    NONE = "None"
-    LEFT = "Left Light"
-    RIGHT = "Right Light"
-    TOP = "Top Light"
-    BOTTOM = "Bottom Light"
-
-
-block = gr.Blocks().queue()
-with block:
+with gr.Blocks(title=f"sdxl-turbo", css=".gradio-container {max-width: 544px !important}", analytics_enabled=False) as demo:
     with gr.Row():
-        gr.Markdown("## IC-Light (Relighting with Foreground Condition)")
-    with gr.Row():
-        with gr.Column():
-            with gr.Row():
-                input_fg = gr.Image(source='upload', type="numpy", label="Image", height=480)
-                output_bg = gr.Image(type="numpy", label="Preprocessed Foreground", height=480)
-            prompt = gr.Textbox(label="Prompt")
-            bg_source = gr.Radio(choices=[e.value for e in BGSource],
-                                 value=BGSource.NONE.value,
-                                 label="Lighting Preference (Initial Latent)", type='value')
-            example_quick_subjects = gr.Dataset(samples=quick_subjects, label='Subject Quick List', samples_per_page=1000, components=[prompt])
-            example_quick_prompts = gr.Dataset(samples=quick_prompts, label='Lighting Quick List', samples_per_page=1000, components=[prompt])
-            relight_button = gr.Button(value="Relight")
+      with gr.Column():
+          textbox = gr.Textbox(show_label=False, 
+          value="""{
+    "input_fg": "https://hips.hearstapps.com/hmg-prod/images/scarlett-johansson-attends-the-premiere-of-illuminations-news-photo-1639390369.jpg?crop=1.00xw:0.836xh;0,0&resize=640:*",
+    "prompt": "a beautiful girl, neon light, city",
+    "width": 512,
+    "height": 512,
+    "seed": 0,
+    "steps": 25,
+    "a_prompt": "best quality",
+    "n_prompt": "lowres, bad anatomy, bad hands, cropped, worst quality",
+    "cfg": 2,
+    "highres_scale": 1.5,
+    "highres_denoise": 0.5,
+    "lowres_denoise": 0.9,
+    "bg_source": "BOTTOM"
+}""")
+          button = gr.Button()
+    with gr.Row(variant="default"):
+        output_image = gr.Image(
+            show_label=False,
+            type="pil",
+            interactive=False,
+            height=512,
+            width=512,
+            elem_id="output_image",
+        )
+    button.click(fn=generate, inputs=[textbox], outputs=[output_image], show_progress=False)
 
-            with gr.Group():
-                with gr.Row():
-                    num_samples = gr.Slider(label="Images", minimum=1, maximum=12, value=1, step=1)
-                    seed = gr.Number(label="Seed", value=12345, precision=0)
-
-                with gr.Row():
-                    image_width = gr.Slider(label="Image Width", minimum=256, maximum=1024, value=512, step=64)
-                    image_height = gr.Slider(label="Image Height", minimum=256, maximum=1024, value=640, step=64)
-
-            with gr.Accordion("Advanced options", open=False):
-                steps = gr.Slider(label="Steps", minimum=1, maximum=100, value=25, step=1)
-                cfg = gr.Slider(label="CFG Scale", minimum=1.0, maximum=32.0, value=2, step=0.01)
-                lowres_denoise = gr.Slider(label="Lowres Denoise (for initial latent)", minimum=0.1, maximum=1.0, value=0.9, step=0.01)
-                highres_scale = gr.Slider(label="Highres Scale", minimum=1.0, maximum=3.0, value=1.5, step=0.01)
-                highres_denoise = gr.Slider(label="Highres Denoise", minimum=0.1, maximum=1.0, value=0.5, step=0.01)
-                a_prompt = gr.Textbox(label="Added Prompt", value='best quality')
-                n_prompt = gr.Textbox(label="Negative Prompt", value='lowres, bad anatomy, bad hands, cropped, worst quality')
-        with gr.Column():
-            result_gallery = gr.Gallery(height=832, object_fit='contain', label='Outputs')
-    with gr.Row():
-        dummy_image_for_outputs = gr.Image(visible=False, label='Result')
-    ips = [input_fg, prompt, image_width, image_height, num_samples, seed, steps, a_prompt, n_prompt, cfg, highres_scale, highres_denoise, lowres_denoise, bg_source]
-    relight_button.click(fn=process_relight, inputs=ips, outputs=[output_bg, result_gallery])
-    example_quick_prompts.click(lambda x, y: ', '.join(y.split(', ')[:2] + [x[0]]), inputs=[example_quick_prompts, prompt], outputs=prompt, show_progress=False, queue=False)
-    example_quick_subjects.click(lambda x: x[0], inputs=example_quick_subjects, outputs=prompt, show_progress=False, queue=False)
-
+import os
 PORT = int(os.getenv('server_port'))
-block.queue().launch(inline=False, share=False, debug=True, server_name='0.0.0.0', server_port=PORT)
+demo.queue().launch(inline=False, share=False, debug=True, server_name='0.0.0.0', server_port=PORT)

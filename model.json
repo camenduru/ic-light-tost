@@ -1,6 +1,15 @@
 {
-    "prompt": "totoro",
-    "negative_prompt": "lowres, text, error, cropped, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, out of frame, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck, username, watermark, signature",
-    "width": 1152,
-    "height": 832
-  }
+  "input_fg": "https://hips.hearstapps.com/hmg-prod/images/scarlett-johansson-attends-the-premiere-of-illuminations-news-photo-1639390369.jpg?crop=1.00xw:0.836xh;0,0&resize=640:*",
+  "prompt": "a beautiful girl, neon light, city",
+  "width": 512,
+  "height": 512,
+  "seed": 0,
+  "steps": 25,
+  "a_prompt": "best quality",
+  "n_prompt": "lowres, bad anatomy, bad hands, cropped, worst quality",
+  "cfg": 2,
+  "highres_scale": 1.5,
+  "highres_denoise": 0.5,
+  "lowres_denoise": 0.9,
+  "bg_source": "BOTTOM"
+}

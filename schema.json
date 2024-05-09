@@ -11,14 +11,14 @@
         "jupyter": "https://github.com/camenduru/IC-Light-jupyter",
         "widget": "readme"
       },
+      "input_fg": {
+        "type": "string",
+        "description": "Input Image",
+        "widget": "textarea"
+      },
       "prompt": {
         "type": "string",
         "description": "Prompt",
-        "widget": "textarea"
-      },
-      "negative_prompt": {
-        "type": "string",
-        "description": "Negative Prompt",
         "widget": "textarea"
       },
       "width": {
@@ -28,6 +28,44 @@
       "height": {
         "type": "integer",
         "description": "Height"
+      },
+      "seed": {
+        "type": "integer",
+        "description": "Seed"
+      },
+      "steps": {
+        "type": "integer",
+        "description": "Steps"
+      },
+      "a_prompt": {
+        "type": "string",
+        "description": "A Prompt",
+        "widget": "textarea"
+      },
+      "n_prompt": {
+        "type": "string",
+        "description": "N prompt",
+        "widget": "textarea"
+      },
+      "cfg": {
+        "type": "integer",
+        "description": "CFG"
+      },
+      "highres_scale": {
+        "type": "number",
+        "description": "Highres Scale"
+      },
+      "highres_denoise": {
+        "type": "number",
+        "description": "Highres Denoise"
+      },
+      "lowres_denoise": {
+        "type": "number",
+        "description": "Lowres Denoise"
+      },
+      "bg_source": {
+        "type": "string",
+        "description": "BG Source"
       }
     },
     "buttons": [

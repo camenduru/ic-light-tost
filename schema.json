@@ -13,7 +13,7 @@
       },
       "input_fg": {
         "type": "string",
-        "description": "Input Image",
+        "description": "Input Image URL",
         "widget": "textarea"
       },
       "prompt": {

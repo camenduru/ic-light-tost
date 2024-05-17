@@ -1,0 +1,10 @@
+diffusers==0.27.2
+transformers==4.36.2
+opencv-python
+safetensors
+pillow==10.2.0
+einops
+peft
+protobuf==3.20
+xformers==0.0.25
+runpod

@@ -349,9 +349,7 @@ def closestNumber(n, m):
 
 @torch.inference_mode()
 def generate(input):
-    command = input["input"]
-    command = json.dumps(command)
-    values = json.loads(command)
+    values = input["input"]
     input_fg = values['input_fg']
     input_fg = load_image(input_fg)
     input_fg = np.asarray(input_fg)
@@ -376,9 +374,11 @@ def generate(input):
     response = None
     try:
         source_id = values['source_id']
-        source_channel = values['source_channel']
+        del values['source_id']
+        source_channel = values['source_channel']     
+        del values['source_channel']
         files = {f"image.png": open(result, "rb").read()}
-        payload = {"content": f"{command} <@{source_id}>"}
+        payload = {"content": f"{json.dumps(values)} <@{source_id}>"}
         response = requests.post(
             f"https://discord.com/api/v9/channels/{source_channel}/messages",
             data=payload,

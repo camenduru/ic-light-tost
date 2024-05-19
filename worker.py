@@ -361,7 +361,7 @@ def generate(command):
         input_fg = load_image(input_fg)
         input_fg = np.asarray(input_fg)
         prompt = values['prompt']
-        width =closestNumber(values['width'], 8)
+        width = closestNumber(values['width'], 8)
         height = closestNumber(values['height'], 8)
         seed = values['seed']
         steps = values['steps']

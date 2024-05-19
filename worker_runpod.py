@@ -15,7 +15,6 @@ from enum import Enum
 from torch.hub import download_url_to_file
 
 import runpod
-from runpod.serverless.utils import rp_upload, rp_cleanup
 
 discord_token = os.getenv('com_camenduru_discord_token')
 

@@ -346,46 +346,29 @@ def closestNumber(n, m):
         return n1
     return n2
 
-def is_parsable_json(command):
-    try:
-        json.loads(command)
-        return True
-    except json.JSONDecodeError:
-        return False
-
 @torch.inference_mode()
 def generate(command):
-    if is_parsable_json(command):
-        values = json.loads(command)
-        input_fg = values['input_fg']
-        input_fg = load_image(input_fg)
-        input_fg = np.asarray(input_fg)
-        prompt = values['prompt']
-        width = closestNumber(values['width'], 8)
-        height = closestNumber(values['height'], 8)
-        seed = values['seed']
-        steps = values['steps']
-        a_prompt = values['a_prompt']
-        n_prompt = values['n_prompt']
-        cfg = values['cfg']
-        highres_scale = values['highres_scale']
-        highres_denoise = values['highres_denoise']
-        lowres_denoise = values['lowres_denoise']
-        bg_source = values['bg_source']        
-        input_fg, matting = run_rmbg(input_fg)
-        images = process(input_fg, prompt, width, height, 1, seed, steps, a_prompt, n_prompt, cfg, highres_scale, highres_denoise, lowres_denoise, bg_source)
-        image = Image.fromarray(images[0])
-        image.save('/content/image.jpg')
-        return image
-    else:
-        input_fg = load_image("https://hips.hearstapps.com/hmg-prod/images/scarlett-johansson-attends-the-premiere-of-illuminations-news-photo-1639390369.jpg?crop=1.00xw:0.836xh;0,0&resize=640:*")
-        input_fg = np.asarray(input_fg)
-        width = closestNumber(512, 8)
-        height = closestNumber(512, 8)
-        images = process(input_fg, command, width, height, 1, 1, 25, 'best quality', 'lowres, bad anatomy, bad hands, cropped, worst quality', 2, 1.5, 0.5, 0.9, 'RIGHT')
-        image = Image.fromarray(images[0])
-        image.save('/content/image.jpg')
-        return image
+    values = json.loads(command)
+    input_fg = values['input_fg']
+    input_fg = load_image(input_fg)
+    input_fg = np.asarray(input_fg)
+    prompt = values['prompt']
+    width = closestNumber(values['width'], 8)
+    height = closestNumber(values['height'], 8)
+    seed = values['seed']
+    steps = values['steps']
+    a_prompt = values['a_prompt']
+    n_prompt = values['n_prompt']
+    cfg = values['cfg']
+    highres_scale = values['highres_scale']
+    highres_denoise = values['highres_denoise']
+    lowres_denoise = values['lowres_denoise']
+    bg_source = values['bg_source']        
+    input_fg, matting = run_rmbg(input_fg)
+    images = process(input_fg, prompt, width, height, 1, seed, steps, a_prompt, n_prompt, cfg, highres_scale, highres_denoise, lowres_denoise, bg_source)
+    image = Image.fromarray(images[0])
+    image.save('/content/image.jpg')
+    return image
 
 with gr.Blocks(css=".gradio-container {max-width: 544px !important}", analytics_enabled=False) as demo:
     with gr.Row():
@@ -416,7 +399,7 @@ with gr.Blocks(css=".gradio-container {max-width: 544px !important}", analytics_
             width=512,
             elem_id="output_image",
         )
-    button.click(fn=generate, inputs=[textbox], outputs=[output_image], show_progress=False)
+    button.click(fn=generate, inputs=[textbox], outputs=[output_image])
 
 import os
 PORT = int(os.getenv('server_port'))

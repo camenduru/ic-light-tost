@@ -99,6 +99,14 @@
         }
       ],
       "default": "BOTTOM"
+    },
+    "example": {
+      "type": "string",
+      "image1": "https://fakeimg.pl/768x1152/282828/eae0d0/?text=input#.png",
+      "image2": "https://hips.hearstapps.com/hmg-prod/images/scarlett-johansson-attends-the-premiere-of-illuminations-news-photo-1639390369.jpg",
+      "image3": "https://fakeimg.pl/768x1152/282828/eae0d0/?text=output#.png",
+      "image4": "https://files.catbox.moe/2y2hxb.png",
+      "widget": "example"
     }
   },
   "buttons": [
